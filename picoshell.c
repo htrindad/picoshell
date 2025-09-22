@@ -19,7 +19,7 @@ int picoshell(char **cmds[])
 			if (pipe(fd) < 0)
 				return 1;
 		}
-		else
+		else // last command should set the fds to -1 but why?
 		{
 			fd[0] = -1;
 			fd[1] = -1;
@@ -28,23 +28,23 @@ int picoshell(char **cmds[])
 		if (pid < 0) // err handle
 		{
 			for (size_t j = 0; j < 2; j++)
-				if (fd[j] != -1)
+				if (fd[j] < 0)
 					close(fd[j]);
-			if (in_fd != -1)
+			if (in_fd < 0)
 				close(in_fd);
 			return 1;
 		}
-		if (!pid)
+		if (!pid) // child process
 		{
 			if (in_fd) // antecipation for next loops
 			{
-				if (dup2(in_fd, 0) == -1)
+				if (dup2(in_fd, 0) < 0)
 					exit(1);
 				close(in_fd);
 			}
-			if (fd[1] != -1)
+			if (fd[1] != -1) // last command fail save
 			{
-				if (dup2(fd[1], 1) == -1)
+				if (dup2(fd[1], 1) < 0)
 					exit(1);
 				close(fd[1]);
 				close(fd[0]);
@@ -64,7 +64,7 @@ int picoshell(char **cmds[])
 	}
 	while (wait(&stat) > 0)
 	{
-		if (WIFEXITED(stat) && WEXITSTATUS(status))
+		if (WIFEXITED(stat) && WEXITSTATUS(stat))
 			ret = 1;
 		else if (!WIFEXITED(stat))
 			ret = 1;

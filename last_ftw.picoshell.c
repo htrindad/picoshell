@@ -35,7 +35,7 @@ int picoshell(char **cmds[])
 		}
 		if (!pid) // child process
 		{
-			if (in_fd) // antecipation for next loops
+			if (in_fd) // antecipation for next loops. The very first iteration does not need a dup2 due to what is written in fd[1] getting to fd[0]
 			{
 				if (dup2(in_fd, 0) < 0)
 					exit(1);
@@ -51,7 +51,7 @@ int picoshell(char **cmds[])
 			execvp(cmds[i][0], cmds[i]);
 			exit(1); // exec fail
 		}
-		else //parent
+		else // parent
 		{
 			if (in_fd)
 				close(in_fd);

@@ -1,29 +1,35 @@
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/wait.h>
+#include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 int picoshell(char **cmds[]);
 
-int main(void)
+int main(int argc, char **argv)
 {
-	char **cmds[4];
-
-//	static char *cmd1[] = {"cat", NULL};
-//	static char *cmd2[] = {"cat", NULL};
-//	static char *cmd3[] = {"ls", "-l", NULL};
-
-	static char *cmd1[] = {"ls", NULL};
-	static char *cmd2[] = {"grep", "l", NULL};
-	static char *cmd3[] = {"wc", NULL};//essayer commande inexistante (comme "wololo")
-
-	cmds[0] = cmd1;
-	cmds[1] = cmd2;
-	cmds[2] = cmd3;
-	cmds[3] = NULL;
-	
-	int res = picoshell(cmds);
-	if (res)
-		write(1, "Returned 1\n", 11);
-	return (0);
+	int cmds_size = 1;
+	for (int i = 1; i < argc; i++)
+	{
+		if (!strcmp(argv[i], "|"))
+			cmds_size++;
+	}
+	char ***cmds = calloc(cmds_size + 1, sizeof(char **));
+	if (!cmds)
+	{
+		dprintf(2, "Malloc error: %m\n");
+		return 1;
+	}
+	cmds[0] = argv + 1;
+	int cmds_i = 1;
+	for (int i = 1; i < argc; i++)
+		if (!strcmp(argv[i], "|"))
+		{
+			cmds[cmds_i] = argv + i + 1;
+			argv[i] = NULL;
+			cmds_i++;
+		}
+	int ret = picoshell(cmds);
+	if (ret)
+		perror("picoshell");
+	free(cmds);
+	return ret;
 }

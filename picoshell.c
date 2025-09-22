@@ -5,14 +5,13 @@
 
 int picoshell(char **cmds[])
 {
-	size_t i = 0;
 	int fd[2];
 	int in_fd = 0;
 	int ret = 0;
 	int pid;
 	int stat;
 
-	while (cmds[i])
+	for (size_t i = 0; cmds[i]; i++)
 	{
 		if (cmds[i + 1]) // parsing
 		{
@@ -59,7 +58,6 @@ int picoshell(char **cmds[])
 			if (fd[1] != -1)
 				close(fd[1]);
 			in_fd = fd[0];
-			i++;
 		}
 	}
 	while (wait(&stat) > 0)

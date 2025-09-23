@@ -15,10 +15,23 @@ I was one of those folks who didn't do pipex, so I was very clumsy at the beggin
 
 - You cannot fork a program twice or more.
 - You need to be precise with the way you close the pipe fds.
+- All the pipes are writing to the ``STDIN_FILENO``, and it's just a question of dupping everything
 
 ### Why doesn’t close(fd[0]) in the child break it?
 
-Because the child doesn’t need it. The parent needs ``fd[0]``, and it still has its own reference. When the parent sets ``in_fd = fd[0]``, that’s a live descriptor, not closed in the parent.
+file descriptors **are not universal**. So 2 processes can have a an fd id number 3. Which is why it is important to close the respective fds in their respective processes.
+
+This is why the code:
+
+```c
+		in_fd = fd[0]; // this sets to fd[0] but said fd is closed.
+```
+
+seems to work.
+
+### you don't need to dup2 fd[0] until the last program, unless you're piping between programs
+
+technically you could add the outputs of ``ls``, ``whoami``, and ``git`` then piping them all into ``grep`` with some argument and it would work
 
 ### credits
 

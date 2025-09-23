@@ -3,7 +3,7 @@
 #include <sys/wait.h>
 #include <string.h>
 
-int picoshell(char **cmds[])
+int ftw_picoshell(char **cmds[])
 {
 	int fd[2];
 	int in_fd = 0;
@@ -18,7 +18,7 @@ int picoshell(char **cmds[])
 			if (pipe(fd) < 0)
 				return 1;
 		}
-		else // last command should set the fds to -1 but why?
+		else // last command sets the fds to -1 so that it may write the execvp back to the terminal
 		{
 			fd[0] = -1;
 			fd[1] = -1;
@@ -41,28 +41,25 @@ int picoshell(char **cmds[])
 					exit(1);
 				close(in_fd);
 			}
-			if (fd[1] != -1) // last command fail save
+			if (fd[1] != -1) // last command fail safe
 			{
 				if (dup2(fd[1], 1) < 0)
 					exit(1);
 				close(fd[1]);
-				close(fd[0]);
+				close(fd[0]); // fd[0] is closed either way
 			}
 			execvp(cmds[i][0], cmds[i]);
 			exit(1); // exec fail
 		}
-		else // parent
-		{
-			if (in_fd)
-				close(in_fd);
-			if (fd[1] != -1)
-				close(fd[1]);
-			in_fd = fd[0];
-		}
+		if (in_fd) // parent
+			close(in_fd);
+		if (fd[1] != -1)
+			close(fd[1]);
+		in_fd = fd[0]; // this sets to fd[0] but said fd is closed.
 	}
-	while (wait(&stat) > 0)
+	while (wait(&stat) > 0) //necessary so that te processes stop
 	{
-		if (WIFEXITED(stat) && WEXITSTATUS(stat))
+		if (WIFEXITED(stat) && WEXITSTATUS(stat)) // check for anomalies
 			ret = 1;
 		else if (!WIFEXITED(stat))
 			ret = 1;

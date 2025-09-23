@@ -3,7 +3,7 @@
 #include <sys/wait.h>
 #include <string.h>
 
-int ftw_picoshell(char **cmds[])
+int picoshell(char **cmds[])
 {
 	int fd[2];
 	int in_fd = 0;
